@@ -4,50 +4,65 @@ import 'dart:ui';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:zitonapp/Error/inparent.dart';
+import 'package:zitonapp/Error/inputdeco.dart';
 import 'package:zitonapp/Error/overflow.dart';
+import 'package:zitonapp/Error/setstate.dart';
+
+import 'Error/viewport.dart';
 
 void main() {
-
   FlutterError.onError = (FlutterErrorDetails details) async {
-    String mode, theme;
+    String mode, theme, drive = "null", absFile = "null";
+    int lineNumber = 0;
 
-    String absFile = TextTreeRenderer(
-      maxDescendentsTruncatableNode: 5,
-    )
-        .render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error))
-        .trimRight()
-        .split('The relevant error-causing widget was:')[1]
-        .split(":")[3];
+    try {
+      absFile = TextTreeRenderer(
+        maxDescendentsTruncatableNode: 5,
+      )
+          .render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error))
+          .trimRight()
+          .split('The relevant error-causing widget was:')[1]
+          .split(":")[3];
+    } catch (error) {
+      //skipp
+    }
 
-    String drive = "${TextTreeRenderer(
-      maxDescendentsTruncatableNode: 5,
-    ).render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error)).trimRight().split('The relevant error-causing widget was:')[1].split(':')[2].split('/')[3]}:";
+    try {
+      drive = "${TextTreeRenderer(
+        maxDescendentsTruncatableNode: 5,
+      ).render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error)).trimRight().split('The relevant error-causing widget was:')[1].split(':')[2].split('/')[3]}:";
+    } catch (error) {
+      //skipp
+    }
 
-    int lineNumber = int.parse(TextTreeRenderer(
-      maxDescendentsTruncatableNode: 5,
-    )
-        .render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error))
-        .trimRight()
-        .split('The relevant error-causing widget was:')[1]
-        .split(":")[4]);
-
-
+    try {
+      lineNumber = int.parse(TextTreeRenderer(
+        maxDescendentsTruncatableNode: 5,
+      )
+          .render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error))
+          .trimRight()
+          .split('The relevant error-causing widget was:')[1]
+          .split(":")[4]);
+    } catch (error) {
+      //skipp
+    }
 
     String fileName = drive + absFile;
     print(fileName);
 
     int i = 1;
-    List<String> errorLines=[];
-    await File(fileName)
-        .openRead()
-        .map(utf8.decode)
-        .transform(const LineSplitter())
-        .forEach((l) {
-      if (i > (lineNumber - 10) && i < (lineNumber + 10)) {
-        errorLines.add(l.toString());
-      }
-      i++;
-    });
+    List<String> errorLines = [];
+    // await File(fileName)
+    //     .openRead()
+    //     .map(utf8.decode)
+    //     .transform(const LineSplitter())
+    //     .forEach((l) {
+    //   if (i > (lineNumber - 10) && i < (lineNumber + 10)) {
+    //     errorLines.add(l.toString());
+    //   }
+    //   i++;
+    // });
 
     if (kDebugMode) {
       print(errorLines);
@@ -89,15 +104,19 @@ void main() {
       },
     };
 
-    String Exception_Splited, error_file;
+    String Exception_Splited, error_file = "not available";
 
-    error_file = TextTreeRenderer(
-      maxDescendentsTruncatableNode: 5,
-    )
-        .render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error))
-        .trimRight().split('The relevant error-causing widget was:')[1].split(":")[3];
-
-
+    try {
+      error_file = TextTreeRenderer(
+        maxDescendentsTruncatableNode: 5,
+      )
+          .render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error))
+          .trimRight()
+          .split('The relevant error-causing widget was:')[1]
+          .split(":")[3];
+    } catch (error) {
+      //skipp
+    }
 
     if (details.exception.toString().length > 500) {
       Exception_Splited = details.exception.toString().split(".")[0];
@@ -107,13 +126,19 @@ void main() {
 
     String hostUrl = "https://api.ziton.live";
 
+    String stack = details.stack == null
+        ? StackTrace.current.toString()
+        : details.stack.toString();
+
+    // print(stack);
+
     http.Response response =
-    await http.post(Uri.parse("$hostUrl/api/flutter/"), body: {
-      "stack_trace": details.stack ?? StackTrace.current.toString(),
+        await http.post(Uri.parse("$hostUrl/api/flutter/"), body: {
+      "stack_trace": stack,
       "name": Exception_Splited,
       "error_file_name": error_file,
       "line_number": lineNumber.toString(),
-      "file": errorLines.toString(),
+      "file": fileName.toString(),
       "starting_line_number": "21",
       "ending_line_number": "2147",
       "information": TextTreeRenderer(
@@ -127,16 +152,14 @@ void main() {
       "platform": json.encode(plat),
       "screen": json.encode(screenDetails),
       "project":
-      "https://dnCrMoCmSzZQHTqPgLNWUdLsnaAFLQkGbKnecHuiOFVtaOZdMIqlxnWObxyC.ziton.live"
+          "https://dnCrMoCmSzZQHTqPgLNWUdLsnaAFLQkGbKnecHuiOFVtaOZdMIqlxnWObxyC.ziton.live"
     });
 
     if (kDebugMode) {
       print(response.statusCode);
     }
 
-    if (kDebugMode) {
-
-    }
+    if (kDebugMode) {}
   };
   runApp(const MyApp());
 }
@@ -166,11 +189,19 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<dynamic> errorName = [""
-      "RenderFlex overflowed",
+  List<dynamic> errorName = [
+    "RenderFlex overflowed",
+    "Vertical viewport was given unbounded height",
+    "InputDecorator cannot have unbounded width",
+    "Incorrect use of ParentData widget",
+    "setState called during build",
   ];
   List<Widget> errorRoute = [
-     const Overflow(),
+    const Overflow(),
+    const ViewPort(),
+    const InputDeco(),
+    const InParent(),
+    const SetSta(),
   ];
 
   @override
@@ -180,8 +211,8 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
-        padding: EdgeInsets.only(left: 10, right: 10, top: screenHeight * .08),
-        child: Container(
+        padding: EdgeInsets.only(left: screenWidth*.08, right: screenWidth*.08, top: screenHeight * .1),
+        child: SizedBox(
           height: screenHeight,
           width: screenWidth,
           child: Column(
@@ -199,34 +230,39 @@ class _MyHomePageState extends State<MyHomePage> {
                   physics: const BouncingScrollPhysics(),
                   itemCount: errorName.length,
                   itemBuilder: (BuildContext context, int index) {
-                    return Container(
-                      height: screenHeight * .06,
-                      width: screenWidth * .6,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(18),
-                          color: Colors.white),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      errorRoute[index]));
-                        },
-                        style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all(Colors.black),
-                          shadowColor: MaterialStateProperty.all(Colors.white),
-                          elevation: MaterialStateProperty.all(0),
-                          overlayColor: MaterialStateProperty.all(
-                              Colors.grey.withOpacity(.2)),
-                        ),
-                        child: Text(
-                          errorName[index],
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: Colors.white,
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: screenHeight * .06),
+                      child: Container(
+                        height: screenHeight * .06,
+                        width: screenWidth * .6,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18),
+                            color: Colors.white),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => errorRoute[index]));
+                          },
+                          style: ButtonStyle(
+                            backgroundColor:
+                                MaterialStateProperty.all(Colors.black),
+                            shadowColor:
+                                MaterialStateProperty.all(Colors.white),
+                            elevation: MaterialStateProperty.all(0),
+                            overlayColor: MaterialStateProperty.all(
+                                Colors.grey.withOpacity(.2)),
+                          ),
+                          child: Text(
+                            errorName[index],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+
+                              overflow: TextOverflow.clip,
+                              fontSize: 15,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
