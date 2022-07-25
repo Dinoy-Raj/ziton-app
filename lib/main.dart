@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:ziton_error/ziton_error.dart';
 import 'package:flutter/material.dart';
 import 'package:zitonapp/Error/inparent.dart';
 import 'package:zitonapp/Error/inputdeco.dart';
@@ -12,154 +13,10 @@ import 'package:zitonapp/Error/setstate.dart';
 import 'Error/viewport.dart';
 
 void main() {
-  FlutterError.onError = (FlutterErrorDetails details) async {
-    String mode, theme, drive = "null", absFile = "null";
-    int lineNumber = 0;
-
-    try {
-      absFile = TextTreeRenderer(
-        maxDescendentsTruncatableNode: 5,
-      )
-          .render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error))
-          .trimRight()
-          .split('The relevant error-causing widget was:')[1]
-          .split(":")[3];
-    } catch (error) {
-      //skipp
-    }
-
-    try {
-      drive = "${TextTreeRenderer(
-        maxDescendentsTruncatableNode: 5,
-      ).render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error)).trimRight().split('The relevant error-causing widget was:')[1].split(':')[2].split('/')[3]}:";
-    } catch (error) {
-      //skipp
-    }
-
-    try {
-      lineNumber = int.parse(TextTreeRenderer(
-        maxDescendentsTruncatableNode: 5,
-      )
-          .render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error))
-          .trimRight()
-          .split('The relevant error-causing widget was:')[1]
-          .split(":")[4]);
-    } catch (error) {
-      //skipp
-    }
-
-    String fileName = drive + absFile;
-    print(fileName);
-
-    int i = 1;
-    List<String> errorLines = [];
-    // await File(fileName)
-    //     .openRead()
-    //     .map(utf8.decode)
-    //     .transform(const LineSplitter())
-    //     .forEach((l) {
-    //   if (i > (lineNumber - 10) && i < (lineNumber + 10)) {
-    //     errorLines.add(l.toString());
-    //   }
-    //   i++;
-    // });
-
-    if (kDebugMode) {
-      print(errorLines);
-    }
-
-    //mode check
-    if (kDebugMode) {
-      mode = "Debug Mode";
-    } else if (kReleaseMode) {
-      mode = "Release Mode";
-    } else {
-      mode = "Profile Mode";
-    }
-
-    if (window.platformBrightness == Brightness.light) {
-      theme = "Light";
-    } else {
-      theme = "Dark";
-    }
-
-    Map plat = {
-      "Operating System": Platform.operatingSystem,
-      "Operating System Version": Platform.operatingSystemVersion,
-      "local host name": Platform.localHostname,
-      "Number of processors": Platform.numberOfProcessors,
-      "OS Details": Platform.version,
-    };
-
-    Map screenDetails = {
-      "Pixel Ratio": window.devicePixelRatio,
-      "Height": window.physicalSize.height,
-      "Width": window.physicalSize.width,
-      "Theme": theme,
-      "Padding": {
-        "Left": window.padding.left,
-        "Right": window.padding.right,
-        "Top": window.padding.top,
-        "Bottom": window.padding.bottom,
-      },
-    };
-
-    String Exception_Splited, error_file = "not available";
-
-    try {
-      error_file = TextTreeRenderer(
-        maxDescendentsTruncatableNode: 5,
-      )
-          .render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error))
-          .trimRight()
-          .split('The relevant error-causing widget was:')[1]
-          .split(":")[3];
-    } catch (error) {
-      //skipp
-    }
-
-    if (details.exception.toString().length > 500) {
-      Exception_Splited = details.exception.toString().split(".")[0];
-    } else {
-      Exception_Splited = details.exception.toString();
-    }
-
-    String hostUrl = "https://api.ziton.live";
-
-    String stack = details.stack == null
-        ? StackTrace.current.toString()
-        : details.stack.toString();
-
-    // print(stack);
-
-    http.Response response =
-        await http.post(Uri.parse("$hostUrl/api/flutter/"), body: {
-      "stack_trace": stack,
-      "name": Exception_Splited,
-      "error_file_name": error_file,
-      "line_number": lineNumber.toString(),
-      "file": fileName.toString(),
-      "starting_line_number": "21",
-      "ending_line_number": "2147",
-      "information": TextTreeRenderer(
-        maxDescendentsTruncatableNode: 5,
-      )
-          .render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error))
-          .trimRight(),
-      "environment": mode,
-      "context": details.context.toString(),
-      "library": details.library.toString(),
-      "platform": json.encode(plat),
-      "screen": json.encode(screenDetails),
-      "project":
-          "https://dnCrMoCmSzZQHTqPgLNWUdLsnaAFLQkGbKnecHuiOFVtaOZdMIqlxnWObxyC.ziton.live"
-    });
-
-    if (kDebugMode) {
-      print(response.statusCode);
-    }
-
-    if (kDebugMode) {}
+  FlutterError.onError = (FlutterErrorDetails errorDetails) {
+    ZitonError(
+        "https://OokNpSGVsSrzqesUiHBTXHnzFDtGMVoViJdgtXcFNCUmYwhQhwXiouYWbTFy.ziton.live",
+        errorDetails);
   };
   runApp(const MyApp());
 }
@@ -191,17 +48,17 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> errorName = [
     "RenderFlex overflowed",
-    "Vertical viewport was given unbounded height",
     "InputDecorator cannot have unbounded width",
     "Incorrect use of ParentData widget",
     "setState called during build",
+    "Vertical viewport was given unbounded height",
   ];
   List<Widget> errorRoute = [
     const Overflow(),
-    const ViewPort(),
     const InputDeco(),
     const InParent(),
     const SetSta(),
+    const ViewPort(),
   ];
 
   @override
@@ -211,7 +68,10 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
-        padding: EdgeInsets.only(left: screenWidth*.08, right: screenWidth*.08, top: screenHeight * .1),
+        padding: EdgeInsets.only(
+            left: screenWidth * .08,
+            right: screenWidth * .08,
+            top: screenHeight * .1),
         child: SizedBox(
           height: screenHeight,
           width: screenWidth,
@@ -258,7 +118,6 @@ class _MyHomePageState extends State<MyHomePage> {
                             errorName[index],
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-
                               overflow: TextOverflow.clip,
                               fontSize: 15,
                               color: Colors.white,
