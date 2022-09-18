@@ -15,9 +15,10 @@ import 'Error/viewport.dart';
 void main() {
   FlutterError.onError = (FlutterErrorDetails errorDetails) {
     ZitonError(
-        "https://OokNpSGVsSrzqesUiHBTXHnzFDtGMVoViJdgtXcFNCUmYwhQhwXiouYWbTFy.ziton.live",
+        "https://BQZsqRJtZUnmLbUnaudOimRPjhFJIaNhsIlzhavqcDuVAGBZEvOMQsnyFrtL.ziton.live",
         errorDetails);
   };
+
   runApp(const MyApp());
 }
 
@@ -134,5 +135,15 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+}
+
+void errorun() {
+  try {} catch (error) {
+    ReportError(
+        "https://OokNpSGVsSrzqesUiHBTXHnzFDtGMVoViJdgtXcFNCUmYwhQhwXiouYWbTFy.ziton.live",
+        "error function does not exist",
+        "main.dart",
+        "error in running this code.this code produces error that must be reported to the ziton live");
   }
 }
